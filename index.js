@@ -4,7 +4,7 @@ var lifeP;
 var hit = 0;
 var count = 0;
 var target;
-var noOfObstacles1 = 20;
+var noOfObstacles1 = 25;
 var obstacles1 = [];
 var walls = [];
 
@@ -24,7 +24,7 @@ function setup()
 		var x = random(0, 1) * width;
 		var y = random(0, 1) * height;
 
-		if(abs(x - target.x) < 16 || abs(y - target.y) < 16)
+		if(abs(x - target.x) < 16 || abs(y - target.y) < 16 || abs(x - width/2) < 16 || abs(y - height/2) < 16)
 		{
 			x += 16;
 			y += 16;
@@ -43,6 +43,7 @@ function setup()
 	walls[4] = [width, height];
 	walls[5] = [width, 1];
 	walls[6] = [1, 0];
+	walls[7] = [1, height];
 }
 
 function draw()
@@ -66,13 +67,13 @@ function draw()
 	fill(255);
 	ellipse(target.x, target.y, 16, 16);
 
-	fill(255, 0, 0);
+	fill(255, 0, 0, 200);
 	for(var i = 0; i < noOfObstacles1; i++)
 	{
 		var x = obstacles1[i][0];
 		var y = obstacles1[i][1];
 
-		ellipse(x, y, 16, 16);
+		ellipse(x, y, 30, 30);
 	}	
 
 	fill(255);
@@ -183,7 +184,7 @@ function Population(){
 			for(var j = 0; j < noOfObstacles1; j++)
 			{
 				var temp = dist(x, y, obstacles1[j][0], obstacles1[j][1]);
-				if(temp < 10)
+				if(temp < 19)
 				{
 					flag = false;
 					break;
@@ -224,7 +225,8 @@ function Population(){
 
 function Rocket(dna){
 
-	this.pos = createVector(width/2, height);
+	var x,y;
+	this.pos = createVector(width/2, height/2);
 	this.vel = createVector();
 	this.acc = createVector();
 	this.hitCount = false;
@@ -250,12 +252,13 @@ function Rocket(dna){
 		var d = dist(this.pos.x, this.pos.y, target.x, target.y);
 
 		var flag = false;
-		var x = this.pos.x, y = this.pos.y;
+		x = this.pos.x;
+		y = this.pos.y;
 
 		for(var j = 0; j < noOfObstacles1; j++)
 		{
 			var temp = dist(x, y, obstacles1[j][0], obstacles1[j][1]);
-			if(temp < 10)
+			if(temp < 19)
 			{
 				flag = true;
 				break;
@@ -271,6 +274,7 @@ function Rocket(dna){
 				temp = dist(x, y, walls[j][0], y);
 			else
 				temp = dist(x, y, walls[j][0], walls[j][1]);
+
 			if(temp < 10)
 			{
 				flag = true;
@@ -279,6 +283,7 @@ function Rocket(dna){
 		}
 
 		this.fitness = map(d, 0, width, width, 0);
+
 		if(flag)
 		{
 			this.fitness /= 10;
