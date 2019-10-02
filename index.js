@@ -1,16 +1,24 @@
 var population;
+var popsize = 100;
 var lifespan = 1000;
 var lifeP;
 var hit = 0;
 var count = 0;
 var target;
-var noOfObstacles1 = 25;
+var noOfObstacles1 = 30;
 var obstacles1 = [];
 var walls = [];
+var Generation = 1;
+var lenX = [];
 
 function setup()
 {
 	createCanvas(windowWidth-15, windowHeight-30);
+
+	for(var i = 0; i < popsize; i++)
+	{
+		lenX[i] = 10;
+	}
 
 	population = new Population();
 
@@ -26,12 +34,19 @@ function setup()
 
 		if(abs(x - target.x) < 16 || abs(y - target.y) < 16 || abs(x - width/2) < 16 || abs(y - height/2) < 16)
 		{
-			x += 16;
-			y += 16;
+			x += 50;
+			y += 50;
 		}
+
+		var r = random(255);
+		var g = random(255);
+		var b = random(255);
 
 		point[0] = x;
 		point[1] = y;
+		point[2] = r;
+		point[3] = g;
+		point[4] = b;
 
 		obstacles1[i] = point;
 	}
@@ -60,26 +75,35 @@ function draw()
 		population.evaluate();
 		population.selection();
 
+		Generation++;
 		count = 0;
 		hit = 0;
 	}
 
-	fill(255);
-	ellipse(target.x, target.y, 16, 16);
-
-	fill(255, 0, 0, 200);
 	for(var i = 0; i < noOfObstacles1; i++)
 	{
 		var x = obstacles1[i][0];
 		var y = obstacles1[i][1];
 
-		ellipse(x, y, 30, 30);
+		var r = obstacles1[i][2];
+		var g = obstacles1[i][3];
+		var b = obstacles1[i][4];
+
+		fill(r, g, b, 220);
+
+		ellipse(x, y, 20, 20);
 	}	
+
+	fill(255);
+	ellipse(target.x, target.y, 16, 16);
 
 	fill(255);
 	textSize(15);
 	text('<-- Target', target.x+16, target.y+8);
 	text('( Hits: '+hit+' )', target.x+90, target.y+8);
+
+	textSize(20);
+	text("Generation: "+Generation, 10, 20);
 }
 
 function DNA(genes){
@@ -120,15 +144,15 @@ function Population(){
 	this.popsize = 100;
 	this.matingpool = [];
 
-	for(var i = 0; i < this.popsize; i++)
+	for(var i = 0; i < popsize; i++)
 	{
-		this.rockets[i] = new Rocket();
+		this.rockets[i] = new Rocket(0, lenX[i]);
 	}
 
 	this.evaluate = function(){
 
 		var maxfit = 0;
-		for(var i = 0; i < this.popsize; i++)
+		for(var i = 0; i < popsize; i++)
 		{
 			this.rockets[i].calFitness();
 
@@ -138,14 +162,14 @@ function Population(){
 			}
 		}
 
-		for(var i = 0; i < this.popsize; i++)
+		for(var i = 0; i < popsize; i++)
 		{
 			this.rockets[i].fitness /= maxfit;
 		}
 
 		this.matingpool = [];
 
-		for(var i = 0; i < this.popsize; i++)
+		for(var i = 0; i < popsize; i++)
 		{
 			var n = this.rockets[i].fitness * 100;
 			
@@ -164,7 +188,7 @@ function Population(){
 			var parentA = random(this.matingpool).dna;
 			var parentB = random(this.matingpool).dna;
 			var child = parentA.crossover(parentB);
-			newRockets[i] = new Rocket(child);
+			newRockets[i] = new Rocket(child, lenX[i]);
 		}
 
 		this.rockets = newRockets;
@@ -172,7 +196,7 @@ function Population(){
 
 	this.run = function(){
 
-		for(var i = 0; i < this.popsize; i++)
+		for(var i = 0; i < popsize; i++)
 		{
 			var d = dist(this.rockets[i].pos.x, this.rockets[i].pos.y, target.x, target.y);
 
@@ -184,7 +208,7 @@ function Population(){
 			for(var j = 0; j < noOfObstacles1; j++)
 			{
 				var temp = dist(x, y, obstacles1[j][0], obstacles1[j][1]);
-				if(temp < 19)
+				if(temp < 9)
 				{
 					flag = false;
 					break;
@@ -201,7 +225,7 @@ function Population(){
 				else
 					temp = dist(x, y, walls[j][0], walls[j][1]);
 
-				if(temp < 10)
+				if(temp < 9)
 				{
 					flag = false;
 					break;
@@ -216,6 +240,9 @@ function Population(){
 			{
 				this.rockets[i].hitCount = true;
 				hit++;
+				lenX[i] += 5;
+				if(lenX[i] > 100) 
+					lenX[i] = 100;
 			}
 
 			this.rockets[i].show();
@@ -223,9 +250,8 @@ function Population(){
 	}
 }
 
-function Rocket(dna){
+function Rocket(dna, len){
 
-	var x,y;
 	this.pos = createVector(width/2, height/2);
 	this.vel = createVector();
 	this.acc = createVector();
@@ -251,44 +277,9 @@ function Rocket(dna){
 
 		var d = dist(this.pos.x, this.pos.y, target.x, target.y);
 
-		var flag = false;
-		x = this.pos.x;
-		y = this.pos.y;
-
-		for(var j = 0; j < noOfObstacles1; j++)
-		{
-			var temp = dist(x, y, obstacles1[j][0], obstacles1[j][1]);
-			if(temp < 19)
-			{
-				flag = true;
-				break;
-			}
-		}
-
-		for(var j = 0; j < walls.length; j++)
-		{
-			var temp;
-			if(walls[j][0] == 1)
-				temp = dist(x, y, x, walls[j][1]);
-			else if(walls[j][1] == 1)
-				temp = dist(x, y, walls[j][0], y);
-			else
-				temp = dist(x, y, walls[j][0], walls[j][1]);
-
-			if(temp < 10)
-			{
-				flag = true;
-				break;
-			}
-		}
-
 		this.fitness = map(d, 0, width, width, 0);
 
-		if(flag)
-		{
-			this.fitness /= 10;
-		}
-		else if(dist(x, y, target.x, target.y) < 10)
+		if(dist(this.pos.x, this.pos.y, target.x, target.y) < 10)
 		{
 			this.fitness *= 10;
 		}
@@ -311,7 +302,7 @@ function Rocket(dna){
 		translate(this.pos.x, this.pos.y);
 		rotate(this.vel.heading());
 		rectMode(CENTER);
-		rect(0, 0, 25, 5);
+		rect(0, 0, len, 3);
 		pop();
 	}
 }
