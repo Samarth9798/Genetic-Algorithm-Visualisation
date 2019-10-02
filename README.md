@@ -1,6 +1,6 @@
 # Genetic-Algorithm-Visualisation
 
-This is a simple Genetic Algorithm Visualisation where every new generation improves its accuracy to hit the target and avoid the obstacle.
+This is a simple Genetic Algorithm Visualisation where every new generation improves the accuracy to hit the target and avoid the obstacle.
 
 Language: JavaScript
 
